@@ -71,5 +71,5 @@ jobs:
             echo "SMTP_PORT=${{ secrets.SMTP_PORT }}" >> .env.local
             pnpm install
             pnpm run build
-            pm2 reload vanity-service --update-env
+            pm2 reload vanity-api-service --update-env
           EOF
