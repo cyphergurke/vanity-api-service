@@ -10,5 +10,6 @@ import { Apikey, ApikeySchema } from './schemas/apikeys.schemas';
   ],
   controllers: [ApikeysController],
   providers: [ApikeysService],
+  exports: [ApikeysService, MongooseModule],
 })
 export class ApikeysModule { }

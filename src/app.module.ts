@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { BookingModule } from './booking/booking.module';
 import { ApikeysModule } from './apikeys/apikeys.module';
 import { OrderModule } from './order/order.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MailerService } from './mailer/mailer.service';
 import { OrderProcessingService } from './order-processing/order-processing.service';
+import { APP_GUARD } from '@nestjs/core';
+import { ApikeyGuard } from './apikeys/apikeys.guard';
+import { ApikeysService } from './apikeys/apikeys.service';
+import { MerchantModule } from './merchant/merchant.module';
 
 @Module({
   imports: [
@@ -22,8 +25,13 @@ import { OrderProcessingService } from './order-processing/order-processing.serv
         uri: configService.get<string>('MONGODB_URI'),
       }),
     }),
-    BookingModule, OrderModule, ApikeysModule],
+    OrderModule, ApikeysModule, MerchantModule],
   controllers: [AppController],
-  providers: [AppService, MailerService, OrderProcessingService],
+  providers: [{
+    provide: APP_GUARD,
+    useClass: ApikeyGuard,
+  }, AppService,
+    MailerService,
+    OrderProcessingService, ApikeysService],
 })
 export class AppModule { }

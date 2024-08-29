@@ -8,10 +8,17 @@ async function bootstrap() {
 
   // Swagger setup
   const config = new DocumentBuilder()
-    .setTitle('My API')
+    .setTitle('Vanity Address API Documentation')
     .setDescription('API description')
     .setVersion('1.0')
-    .addTag('api')
+    .addApiKey(
+      {
+        type: 'apiKey',
+        name: 'x-api-key',
+        in: 'header'
+      },
+      'api-key',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);

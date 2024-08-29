@@ -1,13 +1,15 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from 'class-validator';
 
 export class CreateApikeyDto {
-
-
+    @ApiProperty({ example: '333', description: 'User ID' })
     @IsString()
     @IsNotEmpty()
-    readonly key: string;
+    readonly merchant: string;
 
-    // Add other fields if necessary, for example:
-    // @IsDate()
-    // readonly createdAt?: Date;
+    @ApiProperty({ example: false, description: 'Has Admin rights?' })
+    @IsString()
+    @IsNotEmpty()
+    readonly isAdmin: boolean;
+
 }

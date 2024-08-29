@@ -1,14 +1,20 @@
-import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Param, Delete, UseGuards } from '@nestjs/common';
 import { ApikeysService } from './apikeys.service';
 import { CreateApikeyDto } from './dto/create-apikey.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { ApikeyGuard } from './apikeys.guard';
+import { AdminRoute } from 'src/decorators/admin-route.decorator';
+
 
 @ApiTags('API Keys')
+@ApiSecurity('api-key')
 @Controller('apikeys')
+@UseGuards(ApikeyGuard)
 export class ApikeysController {
   constructor(private readonly apikeysService: ApikeysService) { }
 
   @Post()
+  @AdminRoute()
   @ApiOperation({ summary: 'Create a new API key' })
   @ApiResponse({ status: 201, description: 'The API key has been successfully created.' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
@@ -16,12 +22,13 @@ export class ApikeysController {
     return this.apikeysService.create(createApikeyDto);
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Retrieve all API keys' })
-  @ApiResponse({ status: 200, description: 'Return all API keys.' })
-  @ApiResponse({ status: 404, description: 'No API keys found.' })
-  findAll() {
-    return this.apikeysService.findAll();
+  @Post('admin')
+  @AdminRoute()
+  @ApiOperation({ summary: 'Create a new admin API key' })
+  @ApiResponse({ status: 201, description: 'The admin API key has been successfully created.' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
+  createAdmin(@Body() createApikeyDto: CreateApikeyDto) {
+    return this.apikeysService.create(createApikeyDto);
   }
 
   @Delete(':id')
@@ -29,6 +36,6 @@ export class ApikeysController {
   @ApiResponse({ status: 200, description: 'The API key has been successfully deleted.' })
   @ApiResponse({ status: 404, description: 'API key not found.' })
   remove(@Param('id') id: string) {
-    return this.apikeysService.remove(+id);
+    return this.apikeysService.remove(id);
   }
-}
+} 

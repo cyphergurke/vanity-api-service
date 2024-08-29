@@ -12,20 +12,19 @@ export class ApikeysService {
   ) { }
 
   async create(createApikeyDto: CreateApikeyDto) {
-    const key = uuidv4();
-    const apiKey = new this.apikeyModel(createApikeyDto);
+    const apikey = uuidv4();
+    const apiKey = new this.apikeyModel({ apikey: apikey, merchant: createApikeyDto.merchant, isAdmin: createApikeyDto.isAdmin });
     await apiKey.save();
-    return key;
+    return apiKey;
   }
 
-  async findAll() {
-    return await this.apikeyModel.find();
-  }
-
-
-
-  async remove(id: number) {
-    const result = await this.apikeyModel.deleteOne({ id });
+  async remove(id: string) {
+    const result = await this.apikeyModel.deleteOne({ _id: id });
     return result.deletedCount > 0;
+  }
+
+  async validateApiKey(apikey: string): Promise<ApikeyDocument> {
+    const apiKeyDoc = await this.apikeyModel.findOne({ apikey });
+    return apiKeyDoc;
   }
 }
