@@ -2,10 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from 'class-validator';
 
 export class CreateApikeyDto {
-    @ApiProperty({ example: '333', description: 'User ID' })
+    @ApiProperty({ example: '66d094f4ad9d389dfe01cbde', description: 'Merchant ID' })
     @IsString()
     @IsNotEmpty()
-    readonly merchant: string;
+    readonly merchantId: string;
 
     @ApiProperty({ example: false, description: 'Has Admin rights?' })
     @IsString()

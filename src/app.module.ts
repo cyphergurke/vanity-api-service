@@ -11,6 +11,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ApikeyGuard } from './apikeys/apikeys.guard';
 import { ApikeysService } from './apikeys/apikeys.service';
 import { MerchantModule } from './merchant/merchant.module';
+import { MerchantService } from './merchant/merchant.service';
 
 @Module({
   imports: [

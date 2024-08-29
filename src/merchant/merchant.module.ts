@@ -10,5 +10,6 @@ import { Merchant, MerchantSchema } from './schemas/merchant.schema';
   ],
   controllers: [MerchantController],
   providers: [MerchantService],
+  exports: [MerchantService],
 })
 export class MerchantModule { }

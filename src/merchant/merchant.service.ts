@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateMerchantDto } from './dto/create-merchant.dto';
 import { UpdateMerchantDto } from './dto/update-merchant.dto';
 import { Merchant, MerchantDocument } from './schemas/merchant.schema';
@@ -62,5 +62,14 @@ export class MerchantService {
     }
 
     return merchant;
+  }
+
+
+  async addApiKey(merchantId: string, apiKeyId: Types.ObjectId): Promise<Merchant> {
+    return this.merchantModel.findByIdAndUpdate(
+      merchantId,
+      { $push: { apikeys: apiKeyId } },
+      { new: true, useFindAndModify: false }
+    ).exec();
   }
 }
