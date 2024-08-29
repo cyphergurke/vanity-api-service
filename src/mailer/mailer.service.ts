@@ -41,7 +41,6 @@ export class MailerService {
         const info = await this.transporter.sendMail({
             from: '"₿itcoin-Uni.de" <info@bitcoin-uni.de>',
             to: email,
-            bcc: this.configService.get<string>('VANITY_BBC_EMAIL'),
             subject: subject,
             text: mailContent?.mailtext,
             html: mailContent?.mailHTML,

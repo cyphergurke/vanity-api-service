@@ -1,0 +1,75 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    container:
+      image: node:lts-alpine
+
+    steps:
+      - name: Install SSH Client and Dependencies
+        run: apk add --no-cache openssh
+
+      - name: Install PNPM
+        run: npm install -g pnpm
+      
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build the application
+        run: pnpm run build
+
+      - name: Add SSH Key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.VEGETA_SERVER_OPENSSH_KEY }}
+
+      - name: Deploy via SSH
+        env:
+          VEGETA_SERVER_IP: ${{ secrets.VEGETA_SERVER_IP }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL}}
+          MONGODB_URL: ${{ secrets.MONGODB_URL}}
+          LNBITS_APIKEY: ${{ secrets.LNBITS_APIKEY}}
+          OPENNODE_KEY: ${{ secrets.OPENNODE_KEY}}
+          PORT: ${{ secrets.PORT }}
+          CWD: ${{ secrets.CWD }}
+          VANITY_SEARCH_PATH: ${{ secrets.VANITY_SEARCH_PATH }}
+          VANITY_SEARCH_OUT_TXT_PATH: ${{ secrets.VANITY_SEARCH_OUT_TXT_PATH }}
+          THREADS: ${{ secrets.THREADS }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}       
+        run: |
+          ssh -o StrictHostKeyChecking=no vegeta@${{ secrets.VEGETA_SERVER_IP }} << 'EOF'
+            cd ~/vanity2/vanity-api-service
+            git pull origin main
+            echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL}}" > .env.local
+            echo "MONGODB_URL=${{ secrets.MONGODB_URL}}" >> .env.local 
+            echo "OPENNODE_KEY=${{ secrets.OPENNODE_KEY}}" >> .env.local
+            echo "PORT=${{ secrets.PORT}}" >> .env.local
+            echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL}}" >> .env.local
+            echo "CWD=${{ secrets.CWD}}" >> .env.local
+            echo "VANITY_SEARCH_PATH=${{ secrets.VANITY_SEARCH_PATH}}" >> .env.local
+            echo "VANITY_SEARCH_OUT_TXT_PATH=${{ secrets.VANITY_SEARCH_OUT_TXT_PATH}}" >> .env.local
+            echo "THREADS=${{ secrets.THREADS}}" >> .env.local
+            echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> .env.local
+            echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> .env.local
+            echo "SMTP_HOST=${{ secrets.SMTP_HOST }}" >> .env.local
+            echo "SMTP_PORT=${{ secrets.SMTP_PORT }}" >> .env.local
+            pnpm install
+            pnpm run build
+            pm2 reload vanity-service --update-env
+          EOF
