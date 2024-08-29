@@ -3,24 +3,41 @@ import { v4 as uuidv4 } from 'uuid';
 import { Order } from './schemas/order.schemas';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+import calculatePrice from 'src/utils/pricecalculation';
+import { getBTCInvoice } from 'src/utils/getBTCInvoice';
+import { CreateOrderDto } from './dto/create-order.dto';
 
 @Injectable()
 export class OrderService {
   constructor(@InjectModel(Order.name) private orderModel: Model<Order>) { }
 
-  async createOrder(createOrderDto: any): Promise<Order> {
-    const { addrtype, prefixstr, casesensitive, publickey, email, lnurl } = createOrderDto;
+  async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
+    const { addrtype, prefixstr, casesensitive, publickey, callback_url, success_url, email, lnurl } = createOrderDto;
+
+    const prefixLength = prefixstr.length;
+    const price = await calculatePrice(addrtype, prefixLength, casesensitive);
+
+    const id = uuidv4();
+
+    let opennodeInvoice: any = null;
+    if (price > 0) {
+      opennodeInvoice = await getBTCInvoice(id, price);
+    }
+
     const newOrderData = {
-      _id: uuidv4(),
+      _id: id,
       addrtype,
       prefixstr,
       casesensitive: casesensitive ? 1 : 0,
       publickey,
       email,
       lnurl,
-      price: 1,
-      status: "PENDING",
+      callback_url,
+      success_url,
+      price: price,
+      status: price < 1 ? 'PAID' : 'PENDING',
       createdAt: new Date(),
+      payment: opennodeInvoice,
     };
     const createdOrder = new this.orderModel(newOrderData);
     return createdOrder.save();

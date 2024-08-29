@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from 'fs';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from 'src/mailer/mailer.service';
 import { OrderService } from 'src/order/order.service';
+import axios from 'axios';
 
 @Injectable()
 export class OrderProcessingService implements OnModuleInit {
@@ -11,6 +12,7 @@ export class OrderProcessingService implements OnModuleInit {
     private readonly logger = new Logger(OrderProcessingService.name);
     private vanitySearchPath: string;
     private outputDir: string;
+    private threads: string;
 
     constructor(
         private configService: ConfigService,
@@ -19,6 +21,7 @@ export class OrderProcessingService implements OnModuleInit {
     ) {
         this.vanitySearchPath = this.configService.get<string>('VANITY_SEARCH_PATH');
         this.outputDir = this.configService.get<string>('VANITY_SEARCH_OUT_TXT_PATH');
+        this.threads = this.configService.get<string>('THREADS');
     }
 
     onModuleInit() {
@@ -40,21 +43,26 @@ export class OrderProcessingService implements OnModuleInit {
                     { $set: { vanityAddr: vaddr, partialPriv: partialPriv, status: 'COMPLETED' } },
                 );
 
+                if (order.callback_url) {
+                    await axios.post(order.callback_url, { _id: order._id, vaddr, partialPriv })
+                }
+
                 if (order.email) {
                     await this.mailerService.sendPartialPriv(order.email, vaddr, partialPriv, order.language);
-                } else if (order.lnurl) {
+                }
+
+                if (order.lnurl) {
                     this.logger.log('LNURL');
                 }
             } catch (err) {
                 this.logger.error(err);
             }
         } else {
-            throw `Couldn’t find file ${bookingFile}`;
+            this.logger.log(`Couldn’t find file ${bookingFile}`);
         }
     }
 
     private async startVanitySearch(order: any) {
-        const threads = 6;
 
         if (!this.vanitySearchPath) {
             this.logger.error('VanitySearch path is not defined in the environment variables.');
@@ -64,7 +72,6 @@ export class OrderProcessingService implements OnModuleInit {
         const getCurrentOrderStatusInterval = setInterval(async () => {
             const currentOrder = await this.orderService.findOrderById(order._id);
             order = currentOrder;
-            this.logger.log(currentOrder);
             if (currentOrder.status === 'COMPLETED') {
                 await vanityProcess.kill('SIGTERM');
                 this.processNextOrder();
@@ -74,7 +81,7 @@ export class OrderProcessingService implements OnModuleInit {
 
         let args: string[] = [];
         args.push('-stop');
-        args.push('-t', threads.toString());
+        args.push('-t', this.threads.toString());
         args.push('-sp', order.publickey);
         if (order.casesensitive === 0) args.push('-c');
         args.push('-o', `${this.outputDir}/${order._id}.txt`);
@@ -147,6 +154,7 @@ export class OrderProcessingService implements OnModuleInit {
                 }
             }, 5000);
         } else {
+            this.logger.log(`Processing order #${order}`);
             await this.startVanitySearch(order);
         }
     }

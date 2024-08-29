@@ -1,27 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
+import { Document } from 'mongoose';
+
 
 @Schema()
-export class Metadata extends Document {
-    @Prop({ required: true })
-    name: string;
-
-    @Prop({ required: true })
-    email: string;
-}
-
-export const MetadataSchema = SchemaFactory.createForClass(Metadata);
-
-@Schema()
-export class ChainInvoice extends Document {
+export class ChainInvoice {
     @Prop({ required: true })
     address: string;
 }
 
-export const ChainInvoiceSchema = SchemaFactory.createForClass(ChainInvoice);
-
 @Schema()
-export class LightningInvoice extends Document {
+export class LightningInvoice {
     @Prop({ required: true })
     expires_at: number;
 
@@ -29,35 +17,33 @@ export class LightningInvoice extends Document {
     payreq: string;
 }
 
-export const LightningInvoiceSchema = SchemaFactory.createForClass(LightningInvoice);
-
 @Schema()
-export class Transaction extends Document {
-    @Prop({ required: true })
+export class Payment {
+    @Prop({ required: true, unique: true })
     id: string;
 
     @Prop({ required: true })
     description: string;
 
-    @Prop({ default: false })
+    @Prop({ required: true })
     desc_hash: boolean;
 
     @Prop({ required: true })
     created_at: number;
 
-    @Prop({ required: true, enum: ['unpaid', 'paid', 'cancelled'], default: 'unpaid' })
+    @Prop({ required: true })
     status: string;
 
     @Prop({ required: true })
     amount: number;
 
-    @Prop({ default: '' })
+    @Prop({ required: true })
     callback_url: string;
 
-    @Prop({ default: '' })
+    @Prop()
     success_url: string;
 
-    @Prop({ default: '' })
+    @Prop({ required: true })
     hosted_checkout_url: string;
 
     @Prop({ required: true })
@@ -72,19 +58,19 @@ export class Transaction extends Document {
     @Prop({ required: true })
     fiat_value: number;
 
-    @Prop({ default: false })
+    @Prop({ required: true })
     auto_settle: boolean;
 
-    @Prop({ required: true })
+    @Prop()
     notif_email: string;
 
     @Prop({ required: true })
     address: string;
 
-    @Prop({ type: MetadataSchema })
-    metadata: Metadata;
+    @Prop({ type: Object })
+    metadata: Record<string, any>;
 
-    @Prop({ type: ChainInvoiceSchema })
+    @Prop({ type: ChainInvoice })
     chain_invoice: ChainInvoice;
 
     @Prop({ required: true })
@@ -93,31 +79,8 @@ export class Transaction extends Document {
     @Prop({ required: true })
     ttl: number;
 
-    @Prop({ type: LightningInvoiceSchema })
+    @Prop({ type: LightningInvoice })
     lightning_invoice: LightningInvoice;
-}
-
-export const TransactionSchema = SchemaFactory.createForClass(Transaction);
-
-@Schema()
-export class Payment extends Document {
-    @Prop({ enum: ["PAYPAL", "OPENNODE"] })
-    provider: string;
-
-    @Prop({ type: TransactionSchema })
-    opennode: Transaction;
-
-    @Prop({ default: null })
-    amount: number;
-
-    @Prop()
-    txid: string;
-
-    @Prop({ type: Date })
-    txAt: Date;
-
-    @Prop({ enum: ["BTC", "EUR", "USD"] })
-    paidCurrency: string;
 }
 
 export const PaymentSchema = SchemaFactory.createForClass(Payment);
@@ -153,6 +116,12 @@ export class Order extends Document {
 
     @Prop()
     lnurl: string;
+
+    @Prop()
+    callback_url: string;
+
+    @Prop()
+    success_url: string;
 
     @Prop({ default: 0 })
     price: number;

@@ -1,10 +1,11 @@
 import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiSecurity } from '@nestjs/swagger';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from './schemas/order.schemas';
 
-@ApiTags('orders')
+@ApiTags('Orders')
+@ApiSecurity('api-key')
 @Controller('order')
 export class OrderController {
   constructor(private readonly orderService: OrderService) { }
